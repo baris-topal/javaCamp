@@ -29,4 +29,7 @@ public class  User {
 	@Column(name="Confirmed_Password")
 	private String confirmedPassword;
 	
+	@Column(name="EmailVerified")
+	private boolean emailVerified;
+	
 }

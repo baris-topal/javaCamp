@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 
 import com.project.hrms.business.abstracts.JobPositionService;
 import com.project.hrms.business.constants.Messages;
+import com.project.hrms.business.validationRules.concretes.JobPositionValidator;
 import com.project.hrms.core.utilities.helpers.business.BusinessRules;
 import com.project.hrms.core.utilities.results.*;
 import com.project.hrms.dataAccess.abstracts.JobPositionDao;
@@ -18,40 +19,29 @@ import lombok.var;
 public class JobPositionManager implements JobPositionService {
 
 	private JobPositionDao jobPositionDao;
+	private JobPositionValidator jobPositionValidator;
 
 	@Autowired
-	public JobPositionManager(JobPositionDao jobPositionDao) {
+	public JobPositionManager(JobPositionDao jobPositionDao, JobPositionValidator jobPositionValidator) {
 		super();
 		this.jobPositionDao = jobPositionDao;
+		this.jobPositionValidator = jobPositionValidator;
 	}
 
 	@Override
 	public DataResult<List<JobPosition>> getAll() {
-		return new SuccessDataResult<List<JobPosition>>(this.jobPositionDao.findAll(),Messages.SUCCESS_DATA_LISTED);
+		return new SuccessDataResult<List<JobPosition>>(this.jobPositionDao.findAll(), Messages.SUCCESS_DATA_LISTED);
 	}
 
 	@Override
 	public Result add(JobPosition jobPosition) {
 
-		var result = BusinessRules.run(ExistName(jobPosition), BlankField(jobPosition));
+		var result = BusinessRules.run(jobPositionValidator.ExistName(jobPosition),
+				jobPositionValidator.BlankField(jobPosition));
 		if (result.isSuccess()) {
 			this.jobPositionDao.save(jobPosition);
 			return new SuccessResult(Messages.SUCCESS_DATA_ADDED);
 		}
 		return result;
-	}
-
-	private Result BlankField(JobPosition jobPosition) {
-		if (jobPosition.getName().isBlank()) {
-			return new ErrorResult(Messages.ERROR_FIELD_IS_BLANK);
-		}
-		return new SuccessResult();
-	}
-
-	private Result ExistName(JobPosition jobPosition) {
-		if (this.jobPositionDao.existsByName(jobPosition.getName())) {
-			return new ErrorResult(Messages.JOB_POSITION_ERROR_ALREADY_EXISTS);
-		}
-		return new SuccessResult();
 	}
 }
